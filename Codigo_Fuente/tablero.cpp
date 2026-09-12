@@ -82,3 +82,21 @@ void mostrarTablero(const unsigned char* tablero, int filas, int columnas) {
     }
     cout << "============================\n\n";
 }
+
+void rellenarTablero(unsigned char* tablero,int filas,int columnas)
+{
+    for(int c = 0; c < columnas; c++)
+    {
+        for(int f = 0; f < filas; f++)
+        {
+            unsigned char valor =leerFicha(tablero,f,c,columnas);
+
+            if(valor == 6)
+            {
+                unsigned char nuevaFicha = rand() % 6;
+
+                escribirFicha(tablero,f,c,columnas,nuevaFicha);
+            }
+        }
+    }
+}
