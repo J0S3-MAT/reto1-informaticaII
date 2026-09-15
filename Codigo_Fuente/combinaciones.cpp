@@ -27,6 +27,20 @@ bool** crearMascara(int filas, int columnas)
     return marcas;
 }
 
+void destruirMascara(bool**& marcas, int filas)
+{
+    if(marcas != nullptr)
+    {
+        for(int f = 0; f < filas; f++)
+        {
+            delete[] marcas[f];
+        }
+
+        delete[] marcas;
+        marcas = nullptr;
+    }
+}
+
 void limpiarMascara(bool** marcas, int filas, int columnas)
 {
     for(int f = 0; f < filas; f++)
@@ -52,8 +66,8 @@ void imprimirMascara(bool** marcas, int filas, int columnas)
     }
 }
 
-bool detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int columnas) {
-    bool hayCombinacion = false;
+int detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int columnas) {
+    int cantidadCombinaciones = 0; // <-- Cambiamos el bool por un contador
 
     // 1. Deteccion Horizontal
     for (int f = 0; f < filas; ++f) {
@@ -62,23 +76,20 @@ bool detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int c
             unsigned char actual = leerFicha(tablero, f, c, columnas);
             unsigned char siguiente = leerFicha(tablero, f, c + 1, columnas);
 
-            // Si no son vacias ni marcadas y son iguales
             if (actual < 6 && actual == siguiente) {
                 contador++;
             } else {
                 if (contador >= 3) {
-                    hayCombinacion = true;
-                    // Marcar fichas
+                    cantidadCombinaciones++; // <-- Contamos la combinacion
                     for (int k = 0; k < contador; ++k) {
-                        marcas[f][c-k] = true;;
+                        marcas[f][c-k] = true;
                     }
                 }
                 contador = 1;
             }
         }
-        // Verificar el ultimo grupo al finalizar la fila
         if (contador >= 3) {
-            hayCombinacion = true;
+            cantidadCombinaciones++; // <-- Contamos la combinacion al borde
             for (int k = 0; k < contador; ++k) {
                 marcas[f][(columnas - 1) - k] = true;
             }
@@ -96,7 +107,7 @@ bool detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int c
                 contador++;
             } else {
                 if (contador >= 3) {
-                    hayCombinacion = true;
+                    cantidadCombinaciones++; // <-- Contamos la combinacion
                     for (int k = 0; k < contador; ++k) {
                         marcas[f-k][c] = true;
                     }
@@ -105,18 +116,19 @@ bool detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int c
             }
         }
         if (contador >= 3) {
-            hayCombinacion = true;
+            cantidadCombinaciones++; // <-- Contamos la combinacion al borde
             for (int k = 0; k < contador; ++k) {
                 marcas[(filas - 1) - k][c] = true;
             }
         }
     }
 
-    return hayCombinacion;
+    return cantidadCombinaciones; // <-- Retornamos el total
 }
 
-void eliminarMarcadas(unsigned char* tablero, bool** marcas, int filas,int columnas)
+int eliminarMarcadas(unsigned char* tablero, bool** marcas, int filas, int columnas)
 {
+    int eliminadas = 0;
     for(int f = 0; f < filas; f++)
     {
         for(int c = 0; c < columnas; c++)
@@ -124,11 +136,12 @@ void eliminarMarcadas(unsigned char* tablero, bool** marcas, int filas,int colum
             if(marcas[f][c])
             {
                 escribirFicha(tablero, f, c, columnas, 6);
+                eliminadas++;
             }
         }
     }
+    return eliminadas;
 }
-
 
 void aplicarGravedad(unsigned char* tablero,int filas,int columnas)
 {

@@ -1,80 +1,95 @@
 #include <iostream>
-#include "bits.h"
+#include <ctime>
+
+#include "juego.h"
 #include "tablero.h"
 #include "combinaciones.h"
-#include "juego.h"
+#include "bits.h"
 
 using namespace std;
 
-
 int main()
 {
+    srand(time(nullptr));
+
     int filas = 4;
     int columnas = 4;
 
-
-    // Crear tablero
     unsigned char* tablero = crearTablero(filas, columnas);
-
-
-    // Crear máscara de eliminaciones
     bool** marcas = crearMascara(filas, columnas);
 
+    generarFichasAleatorias(tablero, filas, columnas);
 
+    int cascadasIniciales = 0;
+    int combinacionesIniciales = 0;
 
+    resolverCascadas(tablero,marcas,filas,columnas,cascadasIniciales,combinacionesIniciales);
 
+    // Datos de entrada
+    int accion;
+    int columna;
 
-    // Fila 0: A B C D
-    escribirFicha(tablero,0,0,columnas,0);
-    escribirFicha(tablero,0,1,columnas,1);
-    escribirFicha(tablero,0,2,columnas,2);
-    escribirFicha(tablero,0,3,columnas,3);
+    // Estadisticas de la ultima jugada
+    int eliminadasTurno = 0;
+    int cascadasTurno = 0;
+    int combinacionesTurno = 0;
 
+    // Estadisticas acumuladas
+    int totalFichasEliminadas = 0;
+    int totalCombinaciones = 0;
+    int turnosUsuario = 0;
+    int puntuacion = 0;
 
-    // Fila 1: B C D E
-    escribirFicha(tablero,1,0,columnas,1);
-    escribirFicha(tablero,1,1,columnas,2);
-    escribirFicha(tablero,1,2,columnas,3);
-    escribirFicha(tablero,1,3,columnas,4);
+    // Cantidad real de memoria reservada para el tablero
+    int bytesReservados = calcularCantidadBytes(filas, columnas);
 
+    while(true)
+    {
+        mostrarEstadoJuego(tablero,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion);
 
-    // Fila 2: B D E A
-    escribirFicha(tablero,2,0,columnas,1);
-    escribirFicha(tablero,2,1,columnas,3);
-    escribirFicha(tablero,2,2,columnas,4);
-    escribirFicha(tablero,2,3,columnas,0);
+        accion = pedirAccion(filas, columnas);
 
+        if(accion == -1)
+        {
+            break;
+        }
 
-    // Fila 3: B A A E
-    escribirFicha(tablero,3,0,columnas,1);
-    escribirFicha(tablero,3,1,columnas,0);
-    escribirFicha(tablero,3,2,columnas,0);
-    escribirFicha(tablero,3,3,columnas,4);
+        if(procesarModificacionTablero(accion,tablero,marcas,filas,columnas,bytesReservados,eliminadasTurno,cascadasTurno,combinacionesTurno))
+        {
+            if(eliminadasTurno > 0)
+            {
+                actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion);
+            }
 
+            continue;
+        }
 
+        // =========================
+        // JUGADA NORMAL
+        // =========================
 
-    cout << "--- TABLERO INICIAL ---" << endl;
+        cout << "Columna: ";
+        cin >> columna;
 
-    mostrarTablero(tablero, filas, columnas);
+        if(procesarJugada(tablero,marcas,accion,columna,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno))
+        {
+            cout << "Jugada realizada\n";
 
+            actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion);
+        }
 
+        else
+        {
+            cout << "Movimiento invalido\n";
 
-    cout << endl;
-    cout << "--- RESOLVIENDO CASCADAS ---" << endl;
-
-
-    resolverCascadas(tablero,marcas,filas,columnas);
-
-
-
-    cout << endl;
-    cout << "--- TABLERO FINAL ---" << endl;
-
-    mostrarTablero(tablero, filas, columnas);
-
-
+            eliminadasTurno = 0;
+            cascadasTurno = 0;
+            combinacionesTurno = 0;
+        }
+    }
 
     destruirTablero(tablero);
+    destruirMascara(marcas, filas);
 
     return 0;
 }
