@@ -219,26 +219,6 @@ void agregarColumna(unsigned char*& tablero, int filas, int& columnas, int posic
     bytesReservados = bytesNecesarios;
 }
 
-void mostrarTableroBinario(unsigned char* tablero, int filas, int columnas)
-{
-    // Calculamos el tamano real del bloque de memoria
-    int totalBytes = calcularCantidadBytes(filas, columnas);
-
-    cout << "=== MEMORIA EN BINARIO (" << totalBytes << " Bytes) ===\n";
-
-    // Iteramos por cada byte (unsigned char) del arreglo
-    for(int i = 0; i < totalBytes; i++)
-    {
-        // Extraemos los 8 bits de cada byte, del mas al menos significativo
-        for(int b = 7; b >= 0; b--)
-        {
-            cout << ((tablero[i] >> b) & 1);
-        }
-        cout << " "; // Espacio para separar visualmente cada byte
-    }
-    cout << "\n";
-}
-
 void eliminarColumna(unsigned char*& tablero, int filas, int& columnas, int posicion, int& bytesReservados)
 {
     int columnasNuevas = columnas - 1;

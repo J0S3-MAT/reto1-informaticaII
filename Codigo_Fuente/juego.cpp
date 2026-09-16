@@ -270,17 +270,80 @@ bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marc
     return false;
 }
 
-void actualizarEstadisticas(int eliminadasTurno,int cascadasTurno,int combinacionesTurno,int& totalFichasEliminadas,
-int& totalCombinaciones,
+void actualizarEstadisticas(int eliminadasTurno,int cascadasTurno,int combinacionesTurno,int& totalFichasEliminadas,int& totalCombinaciones,
 int& turnosUsuario,
-int& puntuacion)
+int& puntuacion,
+bool esJugadaUsuario)
 {
     totalFichasEliminadas += eliminadasTurno;
 
     totalCombinaciones += combinacionesTurno;
 
-    turnosUsuario++;
+    if(esJugadaUsuario)
+    {
+        turnosUsuario++;
+    }
 
-    puntuacion += eliminadasTurno
-                  + (cascadasTurno * 10);
+    puntuacion += eliminadasTurno + (cascadasTurno * 10);
+}
+
+
+void ejecutarJugadaUsuario(unsigned char* tablero,bool** marcas,int filaSeleccionada,int filas,int columnas,int& eliminadasTurno,int& cascadasTurno,
+int& combinacionesTurno,int& totalFichasEliminadas,int& totalCombinaciones,int& turnosUsuario,int& puntuacion)
+{
+    int columna;
+
+    cout << "Columna: ";
+    cin >> columna;
+
+    if(procesarJugada(tablero,marcas,filaSeleccionada,columna,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno))
+    {
+        cout << "Jugada realizada\n";
+
+        actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion,true);
+    }
+    else
+    {
+        cout << "Movimiento invalido\n";
+
+        eliminadasTurno = 0;
+        cascadasTurno = 0;
+        combinacionesTurno = 0;
+    }
+}
+
+int inicializarJuego(unsigned char*& tablero,bool**& marcas,int filas,int columnas)
+{
+    tablero = crearTablero(filas, columnas);
+    marcas = crearMascara(filas, columnas);
+
+    generarFichasAleatorias(tablero, filas, columnas);
+
+    int cascadasIniciales = 0;
+    int combinacionesIniciales = 0;
+
+    resolverCascadas(tablero,marcas,filas,columnas,cascadasIniciales,combinacionesIniciales);
+
+    return calcularCantidadBytes(filas, columnas);
+}
+
+void pedirDimensiones(int& filas, int& columnas)
+{
+    cout << "Cantidad de filas: ";
+    cin >> filas;
+
+    while(filas <= 0)
+    {
+        cout << "Valor invalido. Ingrese una cantidad de filas mayor que 0: ";
+        cin >> filas;
+    }
+
+    cout << "Cantidad de columnas: ";
+    cin >> columnas;
+
+    while(columnas <= 0)
+    {
+        cout << "Valor invalido. Ingrese una cantidad de columnas mayor que 0: ";
+        cin >> columnas;
+    }
 }

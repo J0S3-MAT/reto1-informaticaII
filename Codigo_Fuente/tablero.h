@@ -14,6 +14,4 @@ void agregarFila(unsigned char*& tablero, int& filas, int columnas,int posicion,
 void eliminarFila(unsigned char*& tablero, int& filas, int columnas, int posicion, int& bytesReservados);
 void agregarColumna(unsigned char*& tablero, int filas, int& columnas, int posicion, int& bytesReservados);
 void eliminarColumna(unsigned char*& tablero, int filas, int& columnas, int posicion, int& bytesReservados);
-
-void mostrarTableroBinario(unsigned char* tablero, int filas, int columnas);
 #endif // TABLERO_H

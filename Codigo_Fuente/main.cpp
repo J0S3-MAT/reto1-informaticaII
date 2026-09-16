@@ -4,7 +4,7 @@
 #include "juego.h"
 #include "tablero.h"
 #include "combinaciones.h"
-#include "bits.h"
+
 
 using namespace std;
 
@@ -12,22 +12,18 @@ int main()
 {
     srand(time(nullptr));
 
-    int filas = 4;
-    int columnas = 4;
+    int filas;
+    int columnas;
 
-    unsigned char* tablero = crearTablero(filas, columnas);
-    bool** marcas = crearMascara(filas, columnas);
+    pedirDimensiones(filas, columnas);
 
-    generarFichasAleatorias(tablero, filas, columnas);
+    unsigned char* tablero = nullptr;
+    bool** marcas = nullptr;
 
-    int cascadasIniciales = 0;
-    int combinacionesIniciales = 0;
-
-    resolverCascadas(tablero,marcas,filas,columnas,cascadasIniciales,combinacionesIniciales);
+    int bytesReservados = inicializarJuego(tablero,marcas,filas,columnas);
 
     // Datos de entrada
     int accion;
-    int columna;
 
     // Estadisticas de la ultima jugada
     int eliminadasTurno = 0;
@@ -40,8 +36,6 @@ int main()
     int turnosUsuario = 0;
     int puntuacion = 0;
 
-    // Cantidad real de memoria reservada para el tablero
-    int bytesReservados = calcularCantidadBytes(filas, columnas);
 
     while(true)
     {
@@ -58,36 +52,17 @@ int main()
         {
             if(eliminadasTurno > 0)
             {
-                actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion);
+                actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion, false);
             }
 
             continue;
         }
 
-        // =========================
-        // JUGADA NORMAL
-        // =========================
+        ejecutarJugadaUsuario(tablero,marcas,accion,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,
+        puntuacion);
 
-        cout << "Columna: ";
-        cin >> columna;
 
-        if(procesarJugada(tablero,marcas,accion,columna,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno))
-        {
-            cout << "Jugada realizada\n";
-
-            actualizarEstadisticas(eliminadasTurno,cascadasTurno,combinacionesTurno,totalFichasEliminadas,totalCombinaciones,turnosUsuario,puntuacion);
-        }
-
-        else
-        {
-            cout << "Movimiento invalido\n";
-
-            eliminadasTurno = 0;
-            cascadasTurno = 0;
-            combinacionesTurno = 0;
-        }
     }
-
     destruirTablero(tablero);
     destruirMascara(marcas, filas);
 

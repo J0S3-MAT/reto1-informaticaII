@@ -13,10 +13,24 @@ int pedirAccion(int filas, int columnas);
 
 void actualizarEstadisticas(int eliminadasTurno,int cascadasTurno,int combinacionesTurno,int& totalFichasEliminadas,int& totalCombinaciones,
 int& turnosUsuario,
-int& puntuacion);
+int& puntuacion,
+bool esJugadaUsuario);
 
 bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marcas,int& filas,int& columnas,int& bytesReservados,
 int& eliminadasTurno,
 int& cascadasTurno,
 int& combinacionesTurno);
+
+
+void ejecutarJugadaUsuario(unsigned char* tablero,bool** marcas,int filaSeleccionada,int filas,int columnas,int& eliminadasTurno,int& cascadasTurno,
+int& combinacionesTurno,
+int& totalFichasEliminadas,
+int& totalCombinaciones,
+int& turnosUsuario,
+int& puntuacion);
+
+int inicializarJuego(unsigned char*& tablero,bool**& marcas,int filas,int columnas);
+
+void pedirDimensiones(int& filas, int& columnas);
+
 #endif // JUEGO_H
