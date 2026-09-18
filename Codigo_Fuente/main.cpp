@@ -1,4 +1,4 @@
-#include <iostream>
+#include <cstdlib>
 #include <ctime>
 
 #include "juego.h"
@@ -15,10 +15,13 @@ int main()
     int filas;
     int columnas;
 
-    pedirDimensiones(filas, columnas);
+    if(!pedirDimensiones(filas, columnas))
+    {
+        return 0;
+    }
 
     unsigned char* tablero = nullptr;
-    bool** marcas = nullptr;
+    unsigned char* marcas = nullptr;
 
     int bytesReservados = inicializarJuego(tablero,marcas,filas,columnas);
 
@@ -64,7 +67,7 @@ int main()
 
     }
     destruirTablero(tablero);
-    destruirMascara(marcas, filas);
+    destruirMascaraCompacta(marcas);
 
     return 0;
 }

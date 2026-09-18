@@ -5,28 +5,94 @@
 #include <iostream>
 using namespace std;
 
-int resolverCascadas(unsigned char* tablero, bool** marcas, int filas, int columnas, int& cascadasTurno, int& combinacionesTurno)
+bool leerEntero(const char* mensaje, int minimo, int maximo, int& resultado)
 {
-    int totalEliminadasCascada = 0;
-    cascadasTurno = 0;
-    combinacionesTurno = 0; // <-- Reiniciamos el contador al entrar
+    char entrada[16];
 
     while(true)
     {
-        limpiarMascara(marcas, filas, columnas);
+        cout << mensaje;
 
-        // Atrapamos cuantas combinaciones se formaron
-        int encontradas = detectarCombinaciones(tablero, marcas, filas, columnas);
+        if(!cin.getline(entrada, 16))
+        {
+            if(cin.eof())
+                return false;
 
-        if(encontradas == 0) // Si es 0, no hubo combinaciones
+            cin.clear();
+            cin.ignore(10000, '\n');
+
+            cout << "Entrada invalida.\n";
+            continue;
+        }
+
+        int numero = 0;
+        int signo = 1;
+        int i = 0;
+
+        if(entrada[0] == '-')
+        {
+            signo = -1;
+            i = 1;
+        }
+
+        bool valido = entrada[i] != '\0';
+
+        while(entrada[i] != '\0' && valido)
+        {
+            if(entrada[i] < '0' || entrada[i] > '9')
+            {
+                valido = false;
+            }
+            else
+            {
+                numero = numero * 10 + (entrada[i] - '0');
+
+                if(numero > MAX_DIMENSION)
+                    valido = false;
+            }
+
+            i++;
+        }
+
+        numero *= signo;
+
+        if(valido && numero >= minimo && numero <= maximo)
+        {
+            resultado = numero;
+            return true;
+        }
+
+        cout << "Ingrese un numero entero valido.\n";
+    }
+}
+
+
+int resolverCascadas(unsigned char* tablero,unsigned char* marcas,int filas,int columnas,int& cascadasTurno,int& combinacionesTurno)
+{
+    int totalEliminadasCascada = 0;
+
+    cascadasTurno = 0;
+    combinacionesTurno = 0;
+
+    while(true)
+    {
+        limpiarMascaraCompacta(marcas, filas, columnas);
+
+        int encontradas =
+            detectarCombinacionesCompacta(tablero, marcas,
+                                          filas, columnas);
+
+        if(encontradas == 0)
         {
             break;
         }
 
-        combinacionesTurno += encontradas; // <-- Sumamos las combinaciones
+        combinacionesTurno += encontradas;
         cascadasTurno++;
 
-        totalEliminadasCascada += eliminarMarcadas(tablero, marcas, filas, columnas);
+        totalEliminadasCascada +=
+            eliminarMarcadasCompacta(tablero, marcas,
+                                     filas, columnas);
 
         aplicarGravedad(tablero, filas, columnas);
 
@@ -59,7 +125,7 @@ bool eliminarSeleccion(unsigned char* tablero,int fila,int columna,int filas,int
     return true;
 }
 
-bool procesarJugada(unsigned char* tablero, bool** marcas, int fila, int columna, int filas, int columnas, int& eliminadasTurno, int& cascadasTurno, int& combinacionesTurno)
+bool procesarJugada(unsigned char* tablero, unsigned char* marcas, int fila, int columna, int filas, int columnas, int& eliminadasTurno, int& cascadasTurno, int& combinacionesTurno)
 {
     if(!eliminarSeleccion(tablero, fila, columna, filas, columnas))
     {
@@ -132,14 +198,17 @@ int pedirAccion(int filas, int columnas)
         cout << ", -4 elim col";
     }
 
-    cout << ", -5 agr col, o Fila): ";
+    cout << ", -5 agr col, Eliminar una ficha (indique el numero de fila donde esta)): ";
 
-    cin >> accion;
+    if(!leerEntero("", -5, filas - 1, accion))
+    {
+        return -1;
+    }
 
     return accion;
 }
 
-bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marcas,int& filas,int& columnas,int& bytesReservados,
+bool procesarModificacionTablero(int accion,unsigned char*& tablero,unsigned char*& marcas,int& filas,int& columnas,int& bytesReservados,
  int& eliminadasTurno,
  int& cascadasTurno,
  int& combinacionesTurno)
@@ -149,22 +218,25 @@ bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marc
     // AGREGAR FILA
     if(accion == -2)
     {
-        cout << "Posicion para la nueva fila (0 a "
-             << filas << "): ";
 
-        cin >> pos;
-
-        if(pos < 0 || pos > filas)
+        if(filas >= MAX_DIMENSION)
         {
-            cout << "Posicion invalida.\n";
+            cout << "No se pueden agregar mas filas.\n";
             return true;
         }
 
-        destruirMascara(marcas, filas);
+        cout << "Posicion para la nueva fila (0 a "
+             << filas << "): ";
+
+        if(!leerEntero("", 0, filas, pos))
+        {
+            return true;
+        }
+        destruirMascaraCompacta(marcas);
 
         agregarFila(tablero,filas,columnas,pos,bytesReservados);
 
-        marcas = crearMascara(filas, columnas);
+        marcas = crearMascaraCompacta(filas, columnas);
 
         eliminadasTurno = resolverCascadas(tablero,marcas,filas,columnas,cascadasTurno,combinacionesTurno);
 
@@ -185,19 +257,16 @@ bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marc
         cout << "Posicion de la fila a eliminar (0 a "
              << filas - 1 << "): ";
 
-        cin >> pos;
-
-        if(pos < 0 || pos >= filas)
+        if(!leerEntero("", 0, filas - 1, pos))
         {
-            cout << "Posicion invalida.\n";
             return true;
         }
 
-        destruirMascara(marcas, filas);
+        destruirMascaraCompacta(marcas);
 
         eliminarFila(tablero,filas,columnas,pos,bytesReservados);
 
-        marcas = crearMascara(filas, columnas);
+        marcas = crearMascaraCompacta(filas, columnas);
 
         eliminadasTurno = resolverCascadas(tablero,marcas,filas,columnas,cascadasTurno,combinacionesTurno);
 
@@ -218,19 +287,16 @@ bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marc
         cout << "Posicion de la columna a eliminar (0 a "
              << columnas - 1 << "): ";
 
-        cin >> pos;
-
-        if(pos < 0 || pos >= columnas)
+        if(!leerEntero("", 0, columnas - 1, pos))
         {
-            cout << "Posicion invalida.\n";
             return true;
         }
 
-        destruirMascara(marcas, filas);
+        destruirMascaraCompacta(marcas);
 
         eliminarColumna(tablero,filas,columnas,pos,bytesReservados);
 
-        marcas = crearMascara(filas, columnas);
+        marcas = crearMascaraCompacta(filas, columnas);
 
         eliminadasTurno = resolverCascadas(tablero,marcas,filas,columnas,cascadasTurno,combinacionesTurno);
 
@@ -242,22 +308,26 @@ bool procesarModificacionTablero(int accion,unsigned char*& tablero,bool**& marc
     // AGREGAR COLUMNA
     if(accion == -5)
     {
-        cout << "Posicion para la nueva columna (0 a "
-             << columnas << "): ";
 
-        cin >> pos;
-
-        if(pos < 0 || pos > columnas)
+        if(columnas >= MAX_DIMENSION)
         {
-            cout << "Posicion invalida.\n";
+            cout << "No se pueden agregar mas columnas.\n";
             return true;
         }
 
-        destruirMascara(marcas, filas);
+        cout << "Posicion para la nueva columna (0 a "
+             << columnas << "): ";
+
+        if(!leerEntero("", 0, columnas, pos))
+        {
+            return true;
+        }
+
+        destruirMascaraCompacta(marcas);
 
         agregarColumna(tablero,filas,columnas,pos,bytesReservados);
 
-        marcas = crearMascara(filas, columnas);
+        marcas = crearMascaraCompacta(filas, columnas);
 
         eliminadasTurno = resolverCascadas(tablero,marcas,filas,columnas,cascadasTurno,combinacionesTurno);
 
@@ -284,17 +354,19 @@ bool esJugadaUsuario)
         turnosUsuario++;
     }
 
-    puntuacion += eliminadasTurno + (cascadasTurno * 10);
+    puntuacion += eliminadasTurno + (combinacionesTurno * 10);
 }
 
 
-void ejecutarJugadaUsuario(unsigned char* tablero,bool** marcas,int filaSeleccionada,int filas,int columnas,int& eliminadasTurno,int& cascadasTurno,
+void ejecutarJugadaUsuario(unsigned char* tablero,unsigned char* marcas,int filaSeleccionada,int filas,int columnas,int& eliminadasTurno,int& cascadasTurno,
 int& combinacionesTurno,int& totalFichasEliminadas,int& totalCombinaciones,int& turnosUsuario,int& puntuacion)
 {
     int columna;
 
-    cout << "Columna: ";
-    cin >> columna;
+    if(!leerEntero("Columna: ", 0, columnas - 1, columna))
+    {
+        return;
+    }
 
     if(procesarJugada(tablero,marcas,filaSeleccionada,columna,filas,columnas,eliminadasTurno,cascadasTurno,combinacionesTurno))
     {
@@ -312,10 +384,10 @@ int& combinacionesTurno,int& totalFichasEliminadas,int& totalCombinaciones,int& 
     }
 }
 
-int inicializarJuego(unsigned char*& tablero,bool**& marcas,int filas,int columnas)
+int inicializarJuego(unsigned char*& tablero,unsigned char*& marcas,int filas,int columnas)
 {
     tablero = crearTablero(filas, columnas);
-    marcas = crearMascara(filas, columnas);
+    marcas = crearMascaraCompacta(filas, columnas);
 
     generarFichasAleatorias(tablero, filas, columnas);
 
@@ -327,23 +399,16 @@ int inicializarJuego(unsigned char*& tablero,bool**& marcas,int filas,int column
     return calcularCantidadBytes(filas, columnas);
 }
 
-void pedirDimensiones(int& filas, int& columnas)
+
+
+bool pedirDimensiones(int& filas, int& columnas)
 {
-    cout << "Cantidad de filas: ";
-    cin >> filas;
-
-    while(filas <= 0)
+    if(!leerEntero("Cantidad de filas (1 a 40): ",
+                    1, MAX_DIMENSION, filas))
     {
-        cout << "Valor invalido. Ingrese una cantidad de filas mayor que 0: ";
-        cin >> filas;
+        return false;
     }
 
-    cout << "Cantidad de columnas: ";
-    cin >> columnas;
-
-    while(columnas <= 0)
-    {
-        cout << "Valor invalido. Ingrese una cantidad de columnas mayor que 0: ";
-        cin >> columnas;
-    }
+    return leerEntero("Cantidad de columnas (1 a 40): ",
+                      1, MAX_DIMENSION, columnas);
 }

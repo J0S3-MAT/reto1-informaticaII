@@ -1,147 +1,5 @@
 #include "combinaciones.h"
 #include "bits.h"
-#include <iostream>
-
-using namespace std;
-
-bool** crearMascara(int filas, int columnas)
-{
-    //Reservo memoria para un arreglo de punteros, cada uno apunta a una fila de buleanos
-    bool** marcas = new bool*[filas];
-
-    //Recorro esas filas para poner las columnas
-    for(int f = 0; f < filas; f++)
-    {
-        //Para cada fila F reservo la memoria de cada columna
-        marcas[f] = new bool[columnas];
-
-        //Inicializo en false todo ya que no quiero falsos positivos al momento de detectar una secuencia
-        for(int c = 0; c < columnas; c++)
-        {
-            marcas[f][c] = false;
-        }
-    }
-
-
-
-    return marcas;
-}
-
-void destruirMascara(bool**& marcas, int filas)
-{
-    if(marcas != nullptr)
-    {
-        for(int f = 0; f < filas; f++)
-        {
-            delete[] marcas[f];
-        }
-
-        delete[] marcas;
-        marcas = nullptr;
-    }
-}
-
-void limpiarMascara(bool** marcas, int filas, int columnas)
-{
-    for(int f = 0; f < filas; f++)
-    {
-        for(int c = 0; c < columnas; c++)
-        {
-            marcas[f][c] = false;
-        }
-    }
-}
-
-// -----------------TEMPORAL ------------------------
-void imprimirMascara(bool** marcas, int filas, int columnas)
-{
-    for(int f = 0; f < filas; f++)
-    {
-        for(int c = 0; c < columnas; c++)
-        {
-            cout << marcas[f][c] << " ";
-        }
-
-        cout << endl;
-    }
-}
-
-int detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int columnas) {
-    int cantidadCombinaciones = 0; // <-- Cambiamos el bool por un contador
-
-    // 1. Deteccion Horizontal
-    for (int f = 0; f < filas; ++f) {
-        int contador = 1;
-        for (int c = 0; c < columnas - 1; ++c) {
-            unsigned char actual = leerFicha(tablero, f, c, columnas);
-            unsigned char siguiente = leerFicha(tablero, f, c + 1, columnas);
-
-            if (actual < 6 && actual == siguiente) {
-                contador++;
-            } else {
-                if (contador >= 3) {
-                    cantidadCombinaciones++; // <-- Contamos la combinacion
-                    for (int k = 0; k < contador; ++k) {
-                        marcas[f][c-k] = true;
-                    }
-                }
-                contador = 1;
-            }
-        }
-        if (contador >= 3) {
-            cantidadCombinaciones++; // <-- Contamos la combinacion al borde
-            for (int k = 0; k < contador; ++k) {
-                marcas[f][(columnas - 1) - k] = true;
-            }
-        }
-    }
-
-    // 2. Deteccion Vertical
-    for (int c = 0; c < columnas; ++c) {
-        int contador = 1;
-        for (int f = 0; f < filas - 1; ++f) {
-            unsigned char actual = leerFicha(tablero, f, c, columnas);
-            unsigned char siguiente = leerFicha(tablero, f + 1, c, columnas);
-
-            if (actual < 6 && actual == siguiente) {
-                contador++;
-            } else {
-                if (contador >= 3) {
-                    cantidadCombinaciones++; // <-- Contamos la combinacion
-                    for (int k = 0; k < contador; ++k) {
-                        marcas[f-k][c] = true;
-                    }
-                }
-                contador = 1;
-            }
-        }
-        if (contador >= 3) {
-            cantidadCombinaciones++; // <-- Contamos la combinacion al borde
-            for (int k = 0; k < contador; ++k) {
-                marcas[(filas - 1) - k][c] = true;
-            }
-        }
-    }
-
-    return cantidadCombinaciones; // <-- Retornamos el total
-}
-
-int eliminarMarcadas(unsigned char* tablero, bool** marcas, int filas, int columnas)
-{
-    int eliminadas = 0;
-    for(int f = 0; f < filas; f++)
-    {
-        for(int c = 0; c < columnas; c++)
-        {
-            if(marcas[f][c])
-            {
-                escribirFicha(tablero, f, c, columnas, 6);
-                eliminadas++;
-            }
-        }
-    }
-    return eliminadas;
-}
 
 void aplicarGravedad(unsigned char* tablero,int filas,int columnas)
 {
@@ -171,4 +29,173 @@ void aplicarGravedad(unsigned char* tablero,int filas,int columnas)
             escribirFicha(tablero,f,c,columnas,6);
         }
     }
+}
+
+void marcarPosicion(unsigned char* marcas,int fila,int columna,int columnas)
+{
+    int indice = calcularIndice(fila, columna, columnas);
+
+    int byte = indice / 8;
+    int bit = indice % 8;
+
+    marcas[byte] |= (1 << bit);
+}
+
+bool estaMarcada(const unsigned char* marcas,int fila,int columna,int columnas)
+{
+    int indice = calcularIndice(fila, columna, columnas);
+
+    int byte = indice / 8;
+    int bit = indice % 8;
+
+    return (marcas[byte] & (1 << bit)) != 0;
+}
+
+unsigned char* crearMascaraCompacta(int filas, int columnas)
+{
+    int totalBits = filas * columnas;
+
+    int bytes = totalBits / 8;
+
+    if(totalBits % 8 != 0)
+    {
+        bytes++;
+    }
+
+    return new unsigned char[bytes]();
+}
+
+void limpiarMascaraCompacta(unsigned char* marcas,int filas,int columnas)
+{
+    int totalBits = filas * columnas;
+
+    int bytes = totalBits / 8;
+
+    if(totalBits % 8 != 0)
+    {
+        bytes++;
+    }
+
+    for(int i = 0; i < bytes; i++)
+    {
+        marcas[i] = 0;
+    }
+}
+
+void destruirMascaraCompacta(unsigned char*& marcas)
+{
+    delete[] marcas;
+
+    marcas = nullptr;
+}
+
+int detectarCombinacionesCompacta(unsigned char* tablero,unsigned char* marcas,int filas,int columnas)
+{
+    int cantidadCombinaciones = 0;
+
+    // DETECCION HORIZONTAL
+    for(int f = 0; f < filas; f++)
+    {
+        int contador = 1;
+
+        for(int c = 0; c < columnas - 1; c++)
+        {
+            unsigned char actual = leerFicha(tablero, f, c, columnas);
+            unsigned char siguiente = leerFicha(tablero, f, c + 1, columnas);
+
+            if(actual < 6 && actual == siguiente)
+            {
+                contador++;
+            }
+            else
+            {
+                if(contador >= 3)
+                {
+                    cantidadCombinaciones++;
+
+                    for(int k = 0; k < contador; k++)
+                    {
+                        marcarPosicion(marcas, f, c - k, columnas);
+                    }
+                }
+
+                contador = 1;
+            }
+        }
+
+        // Combinacion al final de la fila
+        if(contador >= 3)
+        {
+            cantidadCombinaciones++;
+
+            for(int k = 0; k < contador; k++)
+            {
+                marcarPosicion(marcas, f, columnas - 1 - k, columnas);
+            }
+        }
+    }
+
+    // DETECCION VERTICAL
+    for(int c = 0; c < columnas; c++)
+    {
+        int contador = 1;
+
+        for(int f = 0; f < filas - 1; f++)
+        {
+            unsigned char actual = leerFicha(tablero, f, c, columnas);
+            unsigned char siguiente = leerFicha(tablero, f + 1, c, columnas);
+
+            if(actual < 6 && actual == siguiente)
+            {
+                contador++;
+            }
+            else
+            {
+                if(contador >= 3)
+                {
+                    cantidadCombinaciones++;
+
+                    for(int k = 0; k < contador; k++)
+                    {
+                        marcarPosicion(marcas, f - k, c, columnas);
+                    }
+                }
+
+                contador = 1;
+            }
+        }
+
+        // Combinacion al final de la columna
+        if(contador >= 3)
+        {
+            cantidadCombinaciones++;
+
+            for(int k = 0; k < contador; k++)
+            {
+                marcarPosicion(marcas, filas - 1 - k, c, columnas);
+            }
+        }
+    }
+
+    return cantidadCombinaciones;
+}
+
+int eliminarMarcadasCompacta(unsigned char* tablero,const unsigned char* marcas,int filas,int columnas)
+{
+    int eliminadas = 0;
+
+    for(int f = 0; f < filas; f++)
+    {
+        for(int c = 0; c < columnas; c++)
+        {
+            if(estaMarcada(marcas, f, c, columnas))
+            {
+                escribirFicha(tablero, f, c, columnas, 6);
+
+                eliminadas++;
+            }
+        }
+    }
+
+    return eliminadas;
 }

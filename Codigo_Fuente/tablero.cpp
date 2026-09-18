@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include "tablero.h"
 #include "bits.h"
+#include <iomanip>
 
 using namespace std;
 
@@ -46,23 +47,38 @@ void mostrarTableroBinario(const unsigned char* tablero, int filas, int columnas
 }
 
 
-void mostrarTablero(const unsigned char* tablero, int filas, int columnas) {
-    // Simbolos ASCII estándar (nunca se dañan en consola)
-    // 0=@, 1=#, 2=$, 3=%, 4=&, 5=+, 6=Vacio(.), 7=Marcado(*)
-    const char* simbolos[8] = {"@", "#", "$", "%", "&", "+", ".", "*"};
 
-    cout << "\n=== TABLERO SWEET CRUSH ===\n  ";
-    for (int c = 0; c < columnas; ++c) cout << c << " ";
+void mostrarTablero(const unsigned char* tablero, int filas, int columnas)
+{
+    const char simbolos[7] = {'@', '#', '$', '%', '&', '+', '.'};
+
+    cout << "\n=== TABLERO SWEET CRUSH ===\n";
+
+    // Encabezado de columnas
+    cout << "   ";
+
+    for(int c = 0; c < columnas; c++)
+    {
+        cout << setw(3) << c;
+    }
+
     cout << "\n";
 
-    for (int f = 0; f < filas; ++f) {
-        cout << f << " ";
-        for (int c = 0; c < columnas; ++c) {
-            unsigned char val = leerFicha(tablero, f, c, columnas);
-            cout << simbolos[val] << " ";
+    // Imprimir las filas y las fichas
+    for(int f = 0; f < filas; f++)
+    {
+        cout << setw(2) << f << " ";
+
+        for(int c = 0; c < columnas; c++)
+        {
+            unsigned char ficha = leerFicha(tablero, f, c, columnas);
+
+            cout << setw(3) << simbolos[ficha];
         }
+
         cout << "\n";
     }
+
     cout << "============================\n\n";
 }
 

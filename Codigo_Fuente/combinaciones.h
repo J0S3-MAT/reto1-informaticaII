@@ -1,20 +1,19 @@
 #ifndef COMBINACIONES_H
 #define COMBINACIONES_H
 
-// Detecta combinaciones horizontales y verticales, y marca las fichas involucradas con el valor 7
-int detectarCombinaciones(unsigned char* tablero, bool** marcas,int filas,int columnas);
-
-// Reemplaza las fichas marcadas (7) por espacio vacio (6)
-int eliminarMarcadas(unsigned char* tablero, bool** marcas, int filas, int columnas);
-
-bool** crearMascara(int filas, int columnas);
-
-// ------------TEMPORAL -----------
-void imprimirMascara(bool** marcas, int filas, int columnas);
-
 void aplicarGravedad(unsigned char* tablero,int filas,int columnas);
 
-void limpiarMascara(bool** marcas, int filas, int columnas);
+void marcarPosicion(unsigned char* marcas,int fila,int columna,int columnas);
 
-void destruirMascara(bool**& marcas, int filas);
+bool estaMarcada(const unsigned char* marcas,int fila,int columna,int columnas);
+
+unsigned char* crearMascaraCompacta(int filas, int columnas);
+
+void limpiarMascaraCompacta(unsigned char* marcas,int filas,int columnas);
+
+void destruirMascaraCompacta(unsigned char*& marcas);
+
+int detectarCombinacionesCompacta(unsigned char* tablero,unsigned char* marcas,int filas,int columnas);
+
+int eliminarMarcadasCompacta(unsigned char* tablero,const unsigned char* marcas,int filas,int columnas);
 #endif // COMBINACIONES_H
